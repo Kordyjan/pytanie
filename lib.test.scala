@@ -4,4 +4,4 @@ package pytanie
 
 class SanityTest extends munit.FunSuite:
   test("sanity test"):
-    assertEquals(sanity, "It works")
+      assertEquals(sanity, "It works")

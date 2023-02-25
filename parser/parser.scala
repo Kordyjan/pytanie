@@ -33,3 +33,5 @@ extension [T, E](p: Parser[T, E])
   def map[F](f: E => F): Parser[T, F] =
     p.andThen:
       case (tail, res) => (tail, f(res))
+
+  def +>[F](r: Parser[T, F]): Parser[T, F] = p.andThen(_._1).andThen(r)
