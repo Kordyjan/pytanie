@@ -45,3 +45,6 @@ extension [T, E](p: Parser[T, E])
     parse.unlift
 
   def <|>[F](r: Parser[T, F]): Parser[T, E | F] = p.orElse(r)
+
+  def ? : Parser[T, Option[E]] =
+    p.andThen((t, res) => (t, Some(res))).orElse((_, None))
