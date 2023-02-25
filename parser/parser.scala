@@ -43,3 +43,5 @@ extension [T, E](p: Parser[T, E])
         (tailR, _) <- r.lift(tailP)
       yield (tailR, res)
     parse.unlift
+
+  def <|>[F](r: Parser[T, F]): Parser[T, E | F] = p.orElse(r)

@@ -3,6 +3,7 @@ package test
 
 import munit.FunSuite
 import pytanie.test.utils.*
+import scala.compiletime.ops.int
 
 class ParserSuite extends FunSuite:
   given Trace[Any] = NoTrace
@@ -12,6 +13,9 @@ class ParserSuite extends FunSuite:
 
   def letterParser: Parser[Char, Char] =
     case l &: tail if l.isLetter => (tail, l)
+
+  def intDigitParser: Parser[Char, Int] =
+    case d &: tail if d.isDigit => (tail, d - 0x30)
 
   test("accessing the head works"):
       val head &: tail = charTokenization("abcd"): @unchecked
@@ -164,3 +168,49 @@ class ParserSuite extends FunSuite:
         .lift(charTokenization("a012"))
         .assertMatch:
           case Some((_, 'a')) =>
+
+  test("alternative can select left"):
+      val parser = letterParser <|> digitParser
+      parser
+        .lift(charTokenization("a0"))
+        .assertMatch:
+          case Some((_, 'a')) =>
+
+  test("alternative can select right"):
+      val parser = letterParser <|> digitParser
+      parser
+        .lift(charTokenization("0a"))
+        .assertMatch:
+          case Some((_, '0')) =>
+
+  test("alternative prefers left"):
+      val parser = intDigitParser <|> digitParser
+      parser
+        .lift(charTokenization("8x"))
+        .assertMatch:
+          case Some((_, 8)) =>
+
+  test("alternative can fail"):
+      val parser = intDigitParser <|> digitParser
+      parser
+        .lift(charTokenization("xyz"))
+        .assertMatch:
+          case None =>
+
+  test("alternative can be chained"):
+      val parser = intDigitParser <|> digitParser <|> just('*') <|> just(
+        '^'
+      ) <|> letterParser
+      parser
+        .lift(charTokenization("^^"))
+        .assertMatch:
+          case Some((_, '^')) =>
+
+  test("alternative can backtrack"):
+      val parserA = just('*') +> letterParser +> digitParser +> letterParser
+      val parserB = just('*') +> letterParser +> digitParser +> intDigitParser
+      val parser = parserA <|> parserB
+      parser
+        .lift(charTokenization("*a08*a07"))
+        .assertMatch:
+          case Some((_, 8)) =>
