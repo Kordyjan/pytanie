@@ -5,15 +5,15 @@ import munit.FunSuite
 import scala.collection.mutable.Growable
 import pytanie.test.utils.*
 
+def charTokenization(using Trace[Char]): String => Tokens[Char] =
+  tokenize: (input, pos) =>
+    if pos < input.length then
+      log(input(pos))
+      Some(Token(input(pos), pos, pos + 1))
+    else None
+
 class TokenizationSuite extends FunSuite:
   given Trace[Any] = NoTrace
-
-  def charTokenization(using Trace[Char]): String => LazyList[Token[Char]] =
-    tokenize: (input, pos) =>
-      if pos < input.length then
-        log(input(pos))
-        Some(Token(input(pos), pos, pos + 1))
-      else None
 
   test("empty string gives no token"):
     assertEquals(charTokenization("").toList, Nil)
