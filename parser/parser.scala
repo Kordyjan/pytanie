@@ -29,3 +29,7 @@ extension [T, E](p: Parser[T, E])
         (tailR, resR) <- r.lift(tailP)
       yield (tailR, tupled(resP) ++ tupled(resR))
     parse.unlift
+
+  def map[F](f: E => F): Parser[T, F] =
+    p.andThen:
+      case (tail, res) => (tail, f(res))

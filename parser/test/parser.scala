@@ -80,3 +80,17 @@ class ParserSuite extends FunSuite:
       .lift(charTokenization("xyz"))
       .assertMatch:
         case None =>
+
+  test("map works"):
+    val parser = letterParser.map(_.toUpper)
+    parser
+      .lift(charTokenization("abcd"))
+      .assertMatch:
+        case Some((_, 'A')) =>
+
+  test("map doesn't change the parsing failure"):
+    val parser = letterParser.map(_ => 'x')
+    parser
+      .lift(charTokenization("0abc"))
+      .assertMatch:
+        case None =>
