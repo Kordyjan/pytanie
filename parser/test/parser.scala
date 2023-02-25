@@ -129,3 +129,38 @@ class ParserSuite extends FunSuite:
         .lift(charTokenization("012a"))
         .assertMatch:
           case Some((_, 'a')) =>
+
+  test("<+ correctly accepts values"):
+      val parser = letterParser <+ digitParser
+      parser
+        .lift(charTokenization("a1b2"))
+        .assertMatch:
+          case Some((_, 'a')) =>
+
+  test("<+ can reject on first element"):
+      val parser = letterParser <+ digitParser
+      parser
+        .lift(charTokenization("01b2"))
+        .assertMatch:
+          case None =>
+
+  test("<+ can reject on second element"):
+      val parser = letterParser <+ digitParser
+      parser
+        .lift(charTokenization("axb2"))
+        .assertMatch:
+          case None =>
+
+  test("<+ can be chained"):
+      val parser = letterParser <+ digitParser <+ digitParser <+ digitParser
+      parser
+        .lift(charTokenization("a012"))
+        .assertMatch:
+          case Some((_, 'a')) =>
+
+  test("<+ can have long chain on left side"):
+      val parser = letterParser <+ (digitParser <+> digitParser <+> digitParser)
+      parser
+        .lift(charTokenization("a012"))
+        .assertMatch:
+          case Some((_, 'a')) =>

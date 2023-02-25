@@ -35,3 +35,11 @@ extension [T, E](p: Parser[T, E])
       case (tail, res) => (tail, f(res))
 
   def +>[F](r: Parser[T, F]): Parser[T, F] = p.andThen(_._1).andThen(r)
+
+  def <+[F](r: Parser[T, F]): Parser[T, E] =
+    def parse(input: Tokens[T]): Option[(Tokens[T], E)] =
+      for
+        (tailP, res) <- p.lift(input)
+        (tailR, _) <- r.lift(tailP)
+      yield (tailR, res)
+    parse.unlift
