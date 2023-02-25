@@ -16,13 +16,16 @@ private def tupled[A](a: A): Tupled[A] = a match
   case t: Tuple => t
   case _        => a *: EmptyTuple
 
+def just[T](t: T): Parser[T, T] =
+  case `t` &: tail => (tail, t)
+
 extension [T, E](p: Parser[T, E])
   def <+>[F](r: Parser[T, F]): Parser[T, Tuple.Concat[Tupled[E], Tupled[F]]] =
     def parse(
         input: Tokens[T]
     ): Option[(Tokens[T], Tuple.Concat[Tupled[E], Tupled[F]])] =
       for
-        (tailP, resP: E) <- p.lift(input)
-        (tailR, resR: F) <- r.lift(tailP)
+        (tailP, resP) <- p.lift(input)
+        (tailR, resR) <- r.lift(tailP)
       yield (tailR, tupled(resP) ++ tupled(resR))
     parse.unlift

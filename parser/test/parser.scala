@@ -68,3 +68,15 @@ class ParserSuite extends FunSuite:
       .lift(charTokenization("1a2bc"))
       .assertMatch:
         case None =>
+
+  test("just can capture a token"):
+    just('a')
+      .lift(charTokenization("abc"))
+      .assertMatch:
+        case Some((_, 'a')) =>
+
+  test("just can reject a token"):
+    just('a')
+      .lift(charTokenization("xyz"))
+      .assertMatch:
+        case None =>
