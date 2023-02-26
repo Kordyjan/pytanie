@@ -237,3 +237,77 @@ class ParserSuite extends FunSuite:
         .lift(charTokenization("*a08*a07"))
         .assertMatch:
           case Some((_, (None, 8))) =>
+
+  test("repeating parser can accept multiple elements"):
+      val parser = intDigitParser.*
+      parser
+        .lift(charTokenization("12345a"))
+        .assertMatch:
+          case Some((Token('a', _, _) #:: _, List(1, 2, 3, 4, 5))) =>
+
+  test("repeating parser can accept single element"):
+      val parser = intDigitParser.*
+      parser
+        .lift(charTokenization("1a"))
+        .assertMatch:
+          case Some((Token('a', _, _) #:: _, List(1))) =>
+
+  test("repeating parser can accept zero elements"):
+      val parser = intDigitParser.*
+      parser
+        .lift(charTokenization("a1"))
+        .assertMatch:
+          case Some((Token('a', _, _) #:: _, Nil)) =>
+
+  test("repeating parser can backtrack"):
+      val prefix = (just('$') +> intDigitParser).*
+      val parser = prefix <+> (just('$') +> letterParser)
+      parser
+        .lift(charTokenization("$1$2$3$a"))
+        .assertMatch:
+          case Some(t, (List(1, 2, 3), 'a')) if t.isEmpty =>
+
+  test("repeating parser can backtrack on zero matches"):
+      val prefix = (just('$') +> intDigitParser).*
+      val parser = prefix <+> (just('$') +> letterParser)
+      parser
+        .lift(charTokenization("$a"))
+        .assertMatch:
+          case Some(t, (Nil, 'a')) if t.isEmpty =>
+
+  test("non-empty repeating parser can accept multiple elements"):
+      val parser = intDigitParser.+
+      parser
+        .lift(charTokenization("12345a"))
+        .assertMatch:
+          case Some((Token('a', _, _) #:: _, List(1, 2, 3, 4, 5))) =>
+
+  test("non-empty repeating parser can accept single element"):
+      val parser = intDigitParser.+
+      parser
+        .lift(charTokenization("1a"))
+        .assertMatch:
+          case Some((Token('a', _, _) #:: _, List(1))) =>
+
+  test("non-empty repeating parser cannot accept zero elements"):
+      val parser = intDigitParser.+
+      parser
+        .lift(charTokenization("a1"))
+        .assertMatch:
+          case None =>
+
+  test("non-empty repeating parser can backtrack"):
+      val prefix = (just('$') +> intDigitParser).+
+      val parser = prefix <+> (just('$') +> letterParser)
+      parser
+        .lift(charTokenization("$1$2$3$a"))
+        .assertMatch:
+          case Some(t, (List(1, 2, 3), 'a')) if t.isEmpty =>
+
+  test("non-empty repeating parser cannot backtrack on zero matches"):
+      val prefix = (just('$') +> intDigitParser).+
+      val parser = prefix <+> (just('$') +> letterParser)
+      parser
+        .lift(charTokenization("$a"))
+        .assertMatch:
+          case None =>

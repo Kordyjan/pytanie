@@ -19,16 +19,20 @@ private def tupled[A](a: A): Tupled[A] = a match
 def just[T](t: T): Parser[T, T] =
   case `t` &: tail => (tail, t)
 
+def nil[T]: Parser[T, Nil.type] =
+  case t => (t, Nil)
+
 extension [T, E](p: Parser[T, E])
-  def <+>[F](r: Parser[T, F]): Parser[T, Tuple.Concat[Tupled[E], Tupled[F]]] =
-    def parse(
-        input: Tokens[T]
-    ): Option[(Tokens[T], Tuple.Concat[Tupled[E], Tupled[F]])] =
+  private[parser] def next[F](r: => Parser[T, F]): Parser[T, (E, F)] =
+    def parse(input: Tokens[T]): Option[(Tokens[T], (E, F))] =
       for
         (tailP, resP) <- p.lift(input)
         (tailR, resR) <- r.lift(tailP)
-      yield (tailR, tupled(resP) ++ tupled(resR))
+      yield (tailR, (resP, resR))
     parse.unlift
+
+  def <+>[F](r: Parser[T, F]): Parser[T, Tuple.Concat[Tupled[E], Tupled[F]]] =
+    p.next(r).map((e, f) => tupled(e) ++ tupled(f))
 
   def map[F](f: E => F): Parser[T, F] =
     p.andThen:
@@ -44,7 +48,11 @@ extension [T, E](p: Parser[T, E])
       yield (tailR, res)
     parse.unlift
 
-  def <|>[F](r: Parser[T, F]): Parser[T, E | F] = p.orElse(r)
+  def <|>[F](r: => Parser[T, F]): Parser[T, E | F] = p.orElse(r)
 
   def ? : Parser[T, Option[E]] =
     p.andThen((t, res) => (t, Some(res))).orElse((_, None))
+
+  def * : Parser[T, List[E]] = p.+ <|> nil
+
+  def + : Parser[T, List[E]] = p.next(p.*).map((e, f) => e :: f)
