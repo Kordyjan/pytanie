@@ -56,3 +56,13 @@ extension [T, E](p: Parser[T, E])
   def * : Parser[T, List[E]] = p.+ <|> nil
 
   def + : Parser[T, List[E]] = p.next(p.*).map((e, f) => e :: f)
+
+  def separatedBy[F](
+      sep: Parser[T, F],
+      trailingOpt: Boolean = false
+  ): Parser[T, List[E]] =
+    val list = (p.next((sep +> p).*))
+    val listWithEnd = if trailingOpt then (list <+ sep.?).? else list.?
+    listWithEnd.map:
+      case Some(h, t) => h :: t
+      case None       => Nil
