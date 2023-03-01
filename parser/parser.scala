@@ -66,3 +66,6 @@ extension [T, E](p: Parser[T, E])
     listWithEnd.map:
       case Some(h, t) => h :: t
       case None       => Nil
+
+extension (context: StringContext)
+  def lit: Parser[String, String] = just(context.parts.head)
