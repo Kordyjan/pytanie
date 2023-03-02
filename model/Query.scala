@@ -1,6 +1,14 @@
 package pytanie.model
 
-case class Query(name: Option[String], selectionSet: SelectionSet)
+case class Query(
+    name: Option[String],
+    variables: Option[VariableDefinitions],
+    selectionSet: SelectionSet
+)
+
+case class VariableDefinitions(vars: List[VariableDefinition])
+
+case class VariableDefinition(name: String, typ: String)
 
 case class SelectionSet(fields: List[Field])
 
@@ -19,3 +27,11 @@ sealed trait Value
 case class IntValue(value: Int) extends Value
 
 case class StringValue(value: String) extends Value
+
+case class Variable(name: String) extends Value
+
+case class EnumValue(name: String) extends Value
+
+case class ObjectValue(fields: List[ObjectField]) extends Value
+
+case class ObjectField(name: String, value: Value)
