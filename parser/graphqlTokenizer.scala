@@ -11,6 +11,10 @@ def graphqlTokenizer: String => Tokens[String] =
           var end = start
           while end < s.length && s(end) != '\n' do end += 1
           process(s, end)
+        case '"' =>
+          var end = start + 1
+          while end < s.length && s(end) != '"' do end += 1
+          Some(Token(s.substring(start, end + 1), start, end + 1))
         case c if c.isLetterOrDigit =>
           var end = start
           while end < s.length && s(end).isLetterOrDigit do end += 1
