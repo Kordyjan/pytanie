@@ -5,7 +5,6 @@ import pytanie.model.*
 private type ParserS[E] = Parser[String, E]
 
 def parseQuery(input: String): Option[Query] =
-  println(input)
   query.lift(graphqlTokenizer(input)).map(_._2)
 
 private def query: ParserS[Query] =
