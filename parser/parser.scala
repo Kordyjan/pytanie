@@ -31,7 +31,9 @@ extension [T, E](p: Parser[T, E])
       yield (tailR, (resP, resR))
     parse.unlift
 
-  def <+>[F](r: Parser[T, F]): Parser[T, Tuple.Concat[Tupled[E], Tupled[F]]] =
+  def <+>[F](
+      r: => Parser[T, F]
+  ): Parser[T, Tuple.Concat[Tupled[E], Tupled[F]]] =
     p.next(r).map((e, f) => tupled(e) ++ tupled(f))
 
   def map[F](f: E => F): Parser[T, F] =
