@@ -12,7 +12,7 @@ class PreparedQuery[T]:
   def get: T = ???
 
 class Result extends Selectable:
-  def selecttDynamic(name: String) = new Result
+  def selectDynamic(name: String): Any = new Result
 
 extension (inline con: StringContext)
   transparent inline def query() = ${ queryImpl('con) }
@@ -23,7 +23,10 @@ private def queryImpl(con: Expr[StringContext])(using Quotes): Expr[Any] =
   def prepareType(set: SelectionSet): TypeRepr =
     set.fields.foldLeft(TypeRepr.of[Result]): (acc, f) =>
       val typ =
-        f.selectionSet.map(prepareType(_)).getOrElse(TypeRepr.of[Result])
+        val inner = f.selectionSet match
+          case Some(selSet) => prepareType(selSet)
+          case None => TypeRepr.of[String]
+        if Set("nodes", "edges").contains(f.name) then TypeRepr.of[List].appliedTo(inner) else inner
       Refinement(acc, f.name, typ)
 
   val text = con match

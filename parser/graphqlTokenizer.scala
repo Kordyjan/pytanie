@@ -1,6 +1,7 @@
 package pytanie.parser
 
 def graphqlTokenizer: String => Tokens[String] =
+  def isWordChar(c: Char) = c.isLetterOrDigit || c == '_'
   def process(s: String, i: Int): Option[Token[String]] =
     var start = i
     while start < s.length && s(start).isWhitespace do start += 1
@@ -15,9 +16,9 @@ def graphqlTokenizer: String => Tokens[String] =
           var end = start + 1
           while end < s.length && s(end) != '"' do end += 1
           Some(Token(s.substring(start, end + 1), start, end + 1))
-        case c if c.isLetterOrDigit =>
+        case c if isWordChar(c) =>
           var end = start
-          while end < s.length && s(end).isLetterOrDigit do end += 1
+          while end < s.length && isWordChar(s(end)) do end += 1
           Some(Token(s.substring(start, end), start, end))
         case '.' if s.substring(start, start + 3) == "..." =>
           Some(Token("...", start, start + 3))
