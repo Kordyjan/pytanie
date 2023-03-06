@@ -28,9 +28,8 @@ import sttp.client3._
   val res = myQuery.send(
     uri"https://api.github.com/graphql",
     "Kordyjan",
-    Files.readAllLines(Paths.get("../keyfile.txt")).get(0)
+    os.read(os.pwd / os.up / "keyfile.txt")
   )
-
   val x = res.repository.issues.nodes.map(_.number)
 
   println(x)
