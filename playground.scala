@@ -31,9 +31,6 @@ import sttp.client3._
     Files.readAllLines(Paths.get("../keyfile.txt")).get(0)
   )
 
-  val x = res.repository.issues.nodes
-    .map: i =>
-      i.number
-    .toSet
+  val x = res.repository.issues.nodes.map(_.number)
 
   println(x)

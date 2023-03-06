@@ -34,6 +34,7 @@ class Result(data: ujson.Value) extends Selectable:
     data(name) match
       case Str(value) => value
       case Arr(value) => value.map(Result(_)).toList
+      case Num(value) => value.toString
       case value      => Result(value)
 
 extension (inline con: StringContext)
