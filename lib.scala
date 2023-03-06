@@ -1,26 +1,33 @@
 //> using scala "3.3.0-RC3"
 //> using option "--explain"
 //> using toolkit "0.1.4"
-//> using dep "com.lihaoyi::requests:0.8.0"
 
 package pytanie
 
 import quoted.*
 import pytanie.parser.parseQuery
 import pytanie.model.*
-import requests.RequestAuth
+import sttp.client3._
 import ujson.Str
 import ujson.Obj
 import ujson.Arr
 import ujson.Num
 import ujson.False
 import ujson.True
+import sttp.model.Uri
 
 class PreparedQuery[T](text: String):
-  def send(url: String, auth: RequestAuth): T =
+  def send(url: Uri, username: String, token: String): T =
     val data = ujson.Obj("query" -> text)
-    val response = requests.post(url, auth = auth, data = data.toString).text()
-    Result(ujson.read(response)("data")).asInstanceOf[T]
+    val response = basicRequest
+      .post(url)
+      .auth
+      .basic(username, token)
+      .body(data.toString)
+      .send(HttpClientSyncBackend())
+    response.body.match
+      case Left(value)  => throw RuntimeException(value)
+      case Right(value) => Result(ujson.read(value)("data")).asInstanceOf[T]
 
 class Result(data: ujson.Value) extends Selectable:
   def selectDynamic(name: String): Any =

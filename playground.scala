@@ -1,7 +1,7 @@
 package pytanie
 
-import requests.RequestAuth
 import java.nio.file.{Files, Paths}
+import sttp.client3._
 
 @main def playground =
   val myQuery = query"""
@@ -25,11 +25,11 @@ import java.nio.file.{Files, Paths}
     |  }
     |}
   """
-  val auth = RequestAuth.Basic(
+  val res = myQuery.send(
+    uri"https://api.github.com/graphql",
     "Kordyjan",
     Files.readAllLines(Paths.get("../keyfile.txt")).get(0)
   )
-  val res = myQuery.send("https://api.github.com/graphql", auth)
 
   val x = res.repository.issues.nodes
     .map: i =>
