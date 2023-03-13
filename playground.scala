@@ -2,13 +2,16 @@ package pytanie
 
 import java.nio.file.{Files, Paths}
 import sttp.client3._
+import ujson.Value
 
 @main def playground =
+  val number = 15
+
   val myQuery = query"""
     |{
     |  repository(name: "dotty", owner: "lampepfl") {
     |    issues(
-    |      first: 15,
+    |      first: ${number + 5},
     |      filterBy: {states: OPEN},
     |      orderBy: {field: CREATED_AT, direction: DESC}
     |    ) {
@@ -30,6 +33,6 @@ import sttp.client3._
     "Kordyjan",
     os.read(os.pwd / os.up / "keyfile.txt")
   )
-  val x = res.repository.issues.nodes.map(_.number)
+  val x = res.repository.issues.nodes.map(_.title)
 
   println(x)

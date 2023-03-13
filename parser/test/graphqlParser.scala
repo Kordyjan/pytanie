@@ -6,30 +6,30 @@ import pytanie.test.utils.*
 
 class GraphqlParserSuite extends munit.FunSuite:
   test("simple query"):
-    parseQuery("""
+      parseQuery("""
       |query {
       |  viewer {
       |    login
       |  }
       |}""".stripMargin).assertMatch:
-      case Some(
-            Query(
-              None,
-              None,
-              SelectionSet(
-                List(
-                  Field(
-                    "viewer",
-                    None,
-                    Some(SelectionSet(List(Field(login, None, None))))
+        case Some(
+              Query(
+                None,
+                None,
+                SelectionSet(
+                  List(
+                    Field(
+                      "viewer",
+                      None,
+                      Some(SelectionSet(List(Field(login, None, None))))
+                    )
                   )
                 )
               )
-            )
-          ) =>
+            ) =>
 
   test("query with field with arguments"):
-    parseQuery("""
+      parseQuery("""
       |query {
       |  repository(name: "dotty", owner: "lampepfl") {
       |    issues(first: 10) {
@@ -39,44 +39,45 @@ class GraphqlParserSuite extends munit.FunSuite:
       |    }
       |  }
       |}""".stripMargin).assertMatch:
-      case Some(
-            Query(
-              None,
-              None,
-              SelectionSet(
-                List(
-                  Field(
-                    "repository",
-                    Some(
-                      Arguments(
-                        List(
-                          Argument("name", StringValue("dotty")),
-                          Argument("owner", StringValue("lampepfl"))
+        case Some(
+              Query(
+                None,
+                None,
+                SelectionSet(
+                  List(
+                    Field(
+                      "repository",
+                      Some(
+                        Arguments(
+                          List(
+                            Argument("name", StringValue("dotty")),
+                            Argument("owner", StringValue("lampepfl"))
+                          )
                         )
-                      )
-                    ),
-                    Some(
-                      SelectionSet(
-                        List(
-                          Field(
-                            "issues",
-                            Some(
-                              Arguments(
-                                List(
-                                  Argument("first", IntValue(10))
+                      ),
+                      Some(
+                        SelectionSet(
+                          List(
+                            Field(
+                              "issues",
+                              Some(
+                                Arguments(
+                                  List(
+                                    Argument("first", IntValue(10))
+                                  )
                                 )
-                              )
-                            ),
-                            Some(
-                              SelectionSet(
-                                List(
-                                  Field(
-                                    "nodes",
-                                    None,
-                                    Some(
-                                      SelectionSet(
-                                        List(
-                                          Field(title, None, None)
+                              ),
+                              Some(
+                                SelectionSet(
+                                  List(
+                                    Field(
+                                      "nodes",
+                                      None,
+                                      Some(
+                                        SelectionSet(
+                                          List(
+                                            Field(title, None, None)
+                                          )
                                         )
                                       )
                                     )
@@ -91,11 +92,10 @@ class GraphqlParserSuite extends munit.FunSuite:
                   )
                 )
               )
-            )
-          ) =>
+            ) =>
 
   test("query with varaibles"):
-    parseQuery("""
+      parseQuery("""
       |query issues($first: Int!, $name: String!) {
       |  repository(owner: "lampepfl", name: $name) {
       |    issues(first: $first) {
@@ -105,51 +105,52 @@ class GraphqlParserSuite extends munit.FunSuite:
       |    }
       |  }
       |}""".stripMargin).assertMatch:
-      case Some(
-            Query(
-              Some("issues"),
-              Some(
-                VariableDefinitions(
-                  List(
-                    VariableDefinition("first", "Int!"),
-                    VariableDefinition("name", "String!")
+        case Some(
+              Query(
+                Some("issues"),
+                Some(
+                  VariableDefinitions(
+                    List(
+                      VariableDefinition("first", "Int!"),
+                      VariableDefinition("name", "String!")
+                    )
                   )
-                )
-              ),
-              SelectionSet(
-                List(
-                  Field(
-                    "repository",
-                    Some(
-                      Arguments(
-                        List(
-                          Argument("owner", StringValue("lampepfl")),
-                          Argument("name", Variable("name"))
+                ),
+                SelectionSet(
+                  List(
+                    Field(
+                      "repository",
+                      Some(
+                        Arguments(
+                          List(
+                            Argument("owner", StringValue("lampepfl")),
+                            Argument("name", Variable("name"))
+                          )
                         )
-                      )
-                    ),
-                    Some(
-                      SelectionSet(
-                        List(
-                          Field(
-                            "issues",
-                            Some(
-                              Arguments(
-                                List(
-                                  Argument("first", Variable("first"))
+                      ),
+                      Some(
+                        SelectionSet(
+                          List(
+                            Field(
+                              "issues",
+                              Some(
+                                Arguments(
+                                  List(
+                                    Argument("first", Variable("first"))
+                                  )
                                 )
-                              )
-                            ),
-                            Some(
-                              SelectionSet(
-                                List(
-                                  Field(
-                                    "nodes",
-                                    None,
-                                    Some(
-                                      SelectionSet(
-                                        List(
-                                          Field(title, None, None)
+                              ),
+                              Some(
+                                SelectionSet(
+                                  List(
+                                    Field(
+                                      "nodes",
+                                      None,
+                                      Some(
+                                        SelectionSet(
+                                          List(
+                                            Field(title, None, None)
+                                          )
                                         )
                                       )
                                     )
@@ -164,11 +165,10 @@ class GraphqlParserSuite extends munit.FunSuite:
                   )
                 )
               )
-            )
-          ) =>
+            ) =>
 
   test("query with field with complex arguments"):
-    parseQuery("""
+      parseQuery("""
       |query {
       |  repository(name: "dotty", owner: "lampepfl") {
       |    issues(first: 10, filterBy: {states: OPEN}) {
@@ -178,43 +178,47 @@ class GraphqlParserSuite extends munit.FunSuite:
       |    }
       |  }
       |}""".stripMargin).assertMatch:
-      case Some(
-            Query(
-              None,
-              None,
-              SelectionSet(
-                List(
-                  Field(
-                    "repository",
-                    Some(
-                      Arguments(
-                        List(
-                          Argument("name", StringValue("dotty")),
-                          Argument("owner", StringValue("lampepfl"))
+        case Some(
+              Query(
+                None,
+                None,
+                SelectionSet(
+                  List(
+                    Field(
+                      "repository",
+                      Some(
+                        Arguments(
+                          List(
+                            Argument("name", StringValue("dotty")),
+                            Argument("owner", StringValue("lampepfl"))
+                          )
                         )
-                      )
-                    ),
-                    Some(
-                      SelectionSet(
-                        List(
-                          Field(
-                            "issues",
-                            Some(
-                              Arguments(
-                                List(
-                                  Argument("first", IntValue(10)),
-                                  Argument(
-                                    "filterBy",
-                                    ObjectValue(
-                                      List(
-                                        ObjectField("states", EnumValue("OPEN"))
+                      ),
+                      Some(
+                        SelectionSet(
+                          List(
+                            Field(
+                              "issues",
+                              Some(
+                                Arguments(
+                                  List(
+                                    Argument("first", IntValue(10)),
+                                    Argument(
+                                      "filterBy",
+                                      ObjectValue(
+                                        List(
+                                          ObjectField(
+                                            "states",
+                                            EnumValue("OPEN")
+                                          )
+                                        )
                                       )
                                     )
                                   )
                                 )
-                              )
-                            ),
-                            Some(_)
+                              ),
+                              Some(_)
+                            )
                           )
                         )
                       )
@@ -222,5 +226,4 @@ class GraphqlParserSuite extends munit.FunSuite:
                   )
                 )
               )
-            )
-          ) =>
+            ) =>
