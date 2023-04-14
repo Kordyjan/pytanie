@@ -36,4 +36,5 @@ import ujson.Value
   val x = res.repository.issues.nodes.map(_.title)
 
   println(x)
-  println("abc")
+  println("abc?")
+  println("xyz")
