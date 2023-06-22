@@ -1,15 +1,15 @@
 package pytanie
 
-import java.nio.file.{Files, Paths}
-import sttp.client3._
+import sttp.client4._
 import ujson.Value
 
 @main def playground =
   val number = 15
+  val repoName = "dotty"
 
   val myQuery = query"""
     |{
-    |  repository(name: "dotty", owner: "lampepfl") {
+    |  repository(name: ${ repoName }, owner: "lampepfl") {
     |    issues(
     |      first: ${number + 5},
     |      filterBy: {states: OPEN},
@@ -31,8 +31,8 @@ import ujson.Value
   val res = myQuery.send(
     uri"https://api.github.com/graphql",
     "Kordyjan",
-    os.read(os.pwd / os.up / "keyfile.txt")
+    os.read(os.pwd / os.up / "key.txt")
   )
-  val x = res.repository.issues.nodes.map(_.title)
+  val x = res.repository.issues.nodes.flatMap(_.labels.nodes).map(_.name).toSet
 
-  println(x)
+  x.foreach(println)
