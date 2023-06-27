@@ -51,7 +51,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
   import quotes.reflect.*
 
   def prepareType(set: SelectionSet): TypeRepr =
-    set.fields.foldLeft(TypeRepr.of[Result]): (acc, f) =>
+    set.fields.foldLeft(TypeRepr.of[Result]) { (acc, f) =>
       val typ =
         val inner = f.selectionSet match
           case Some(selSet) => prepareType(selSet)
@@ -60,6 +60,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
           TypeRepr.of[List].appliedTo(inner)
         else inner
       Refinement(acc, f.name, typ)
+    }
 
   val parts: Seq[String] = con match
     case '{ StringContext($t: _*) } =>
@@ -68,7 +69,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
 
   val params = paramExprs match
     case Varargs(pars) =>
-      pars.zipWithIndex.map: (par, n) =>
+      pars.zipWithIndex.map{ (par, n) =>
         val name = s"par$n"
         par match
           case '{ $value: t } =>
@@ -80,17 +81,20 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
                   case None =>
                     val tpeName = TypeRepr.of[t].show
                     report.errorAndAbort(s"Variable instance not found for type $tpeName", par)
+      }
 
   val text: String =
     interleave(parts, params.map("$" + _.name)).mkString.stripMargin
 
   val model = parseQuery(text).get
 
-  val newVariables = params.map: p =>
+  val newVariables = params.map { p =>
       '{ VariableDefinition(${Expr(p.name)}, ${p.typeName}) }
+  }
 
-  val paramPairs = params.map: p =>
+  val paramPairs = params.map { p =>
     '{ ${Expr(p.name)} -> ${p.substitution} }
+  }
 
   val paramObj = '{ ujson.Obj.from(${ Expr.ofSeq(paramPairs) }) }
   prepareType(model.selectionSet).asType match

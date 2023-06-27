@@ -9,8 +9,9 @@ def parseQuery(input: String): Option[Query] =
 
 private def query: ParserS[Query] =
   ((just("query") +> identifier.?).? <+> varaibleDefinitions.? <+> selectionSet)
-    .map: (name, vars, set) =>
+    .map { (name, vars, set) =>
       Query(name.flatten, vars, set)
+    }
 
 private def varaibleDefinitions: ParserS[VariableDefinitions] =
   (just("(") +> variableDefinition.separatedBy(just(",")) <+ just(")"))
@@ -25,15 +26,17 @@ private def selectionSet: ParserS[SelectionSet] =
 
 private def field: ParserS[Field] =
   (identifier <+> arguments.? <+> selectionSet.?)
-    .map: (name, args, set) =>
+    .map { (name, args, set) =>
       Field(name, args, set)
+    }
 
 private def arguments: ParserS[Arguments] =
   (just("(") +> argument.separatedBy(just(",")) <+ just(")")).map(Arguments(_))
 
 private def argument: ParserS[Argument] =
-  ((identifier <+ just(":")) <+> value).map: (name, value) =>
+  ((identifier <+ just(":")) <+> value).map { (name, value) =>
     Argument(name, value)
+  }
 
 private def value: ParserS[Value] =
   intValue <|> stringValue <|> variable <|> objectValue <|> enumValue
@@ -58,8 +61,9 @@ private def objectField: ParserS[ObjectField] =
   ((identifier <+ just(":")) <+> value).map(ObjectField(_, _))
 
 private def typ: ParserS[String] =
-  (identifier <+> just("!").?).map: (id, nn) =>
+  (identifier <+> just("!").?).map { (id, nn) =>
     id + nn.getOrElse("")
+  }
 
 private def identifier: ParserS[String] =
   case head &: tail if head(0).isLetter => (tail, head)

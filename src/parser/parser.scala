@@ -37,8 +37,9 @@ extension [T, E](p: Parser[T, E])
     p.next(r).map((e, f) => tupled(e) ++ tupled(f))
 
   def map[F](f: E => F): Parser[T, F] =
-    p.andThen:
+    p.andThen {
       case (tail, res) => (tail, f(res))
+    }
 
   def +>[F](r: Parser[T, F]): Parser[T, F] = p.andThen(_._1).andThen(r)
 
@@ -65,9 +66,10 @@ extension [T, E](p: Parser[T, E])
   ): Parser[T, List[E]] =
     val list = (p.next((sep +> p).*))
     val listWithEnd = if trailingOpt then (list <+ sep.?).? else list.?
-    listWithEnd.map:
+    listWithEnd.map {
       case Some(h, t) => h :: t
       case None       => Nil
+    }
 
 extension (context: StringContext)
   def lit: Parser[String, String] = just(context.parts.head)

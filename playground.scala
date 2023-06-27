@@ -1,5 +1,5 @@
 //> using files src
-//> using scala 3.3.0
+//> using scala 3.2.2
 //> using toolkit latest
 
 
