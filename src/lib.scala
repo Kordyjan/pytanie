@@ -1,9 +1,3 @@
-//> using scala 3.3.0
-
-//> using option -Wunused:all -Wvalue-discard
-//> using toolkit latest
-//> using test.dep org.scala-lang::toolkit-test:0.1.7
-
 package pytanie
 
 import quoted.*

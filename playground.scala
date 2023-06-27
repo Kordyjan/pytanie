@@ -1,3 +1,8 @@
+//> using files src
+//> using scala 3.3.0
+//> using toolkit latest
+
+
 package pytanie
 
 import sttp.client4._

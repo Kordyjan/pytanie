@@ -2,7 +2,6 @@ package pytanie.parser
 package test
 
 import munit.FunSuite
-import scala.collection.mutable.Growable
 import pytanie.test.utils.*
 
 def charTokenization(using Trace[Char]): String => Tokens[Char] =

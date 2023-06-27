@@ -1,6 +1,6 @@
 package pytanie.parser
 
-object &: :
+object `&:`:
   def unapply[T](tokens: LazyList[Token[T]]): Option[(T, LazyList[Token[T]])] =
     tokens match
       case head #:: tail => Some((head.data, tail))

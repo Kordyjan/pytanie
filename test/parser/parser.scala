@@ -3,7 +3,6 @@ package test
 
 import munit.FunSuite
 import pytanie.test.utils.*
-import scala.compiletime.ops.int
 
 class ParserSuite extends FunSuite:
   given Trace[Any] = NoTrace

@@ -42,7 +42,7 @@ case class IntValue(value: Int) extends Value:
   def sendable = value.toString
 
 case class StringValue(value: String) extends Value:
-  def sendable = '"' + value + '"'
+  def sendable = s""""$value""""
 
 case class Variable(name: String) extends Value:
   def sendable = "$" + name
