@@ -30,7 +30,11 @@ class PreparedQuery[T](query: Query, injectedVars: List[VariableDefinition], par
       .send(DefaultSyncBackend())
     response.body.match
       case Left(value)  => throw RuntimeException(value)
-      case Right(value) => Result(ujson.read(value)("data")).asInstanceOf[T]
+      case Right(value) =>
+        val content = ujson.read(value)
+        content.obj.get("data") match
+          case Some(data) => Result(data).asInstanceOf[T]
+          case None => throw RuntimeException(content("errors").toString)
 
 class Result(data: ujson.Value) extends Selectable:
   def selectDynamic(name: String): Any =
