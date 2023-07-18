@@ -32,4 +32,4 @@ object Variable:
     def nullable: Boolean = true
     def write(t: Option[T]): Value = t match
       case Some(x) => summon[Variable[T]].write(x)
-      case None => ujson.Null
+      case None    => ujson.Null

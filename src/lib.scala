@@ -12,10 +12,14 @@ import ujson.Num
 import sttp.model.Uri
 import ToExprModel.given
 
-class PreparedQuery[T](query: Query, injectedVars: List[VariableDefinition], params: ujson.Value):
+class PreparedQuery[T](
+    query: Query,
+    injectedVars: List[VariableDefinition],
+    params: ujson.Value
+):
   lazy val text = injectedVars match
     case Nil => query.sendable
-    case _   =>
+    case _ =>
       val oldVars = query.variables.map(_.vars).getOrElse(Nil)
       val newVars = VariableDefinitions(oldVars ++ injectedVars)
       query.copy(variables = Some(newVars)).sendable
@@ -29,12 +33,12 @@ class PreparedQuery[T](query: Query, injectedVars: List[VariableDefinition], par
       .body(data.toString)
       .send(DefaultSyncBackend())
     response.body.match
-      case Left(value)  => throw RuntimeException(value)
+      case Left(value) => throw RuntimeException(value)
       case Right(value) =>
         val content = ujson.read(value)
         content.obj.get("data") match
           case Some(data) => Result(data).asInstanceOf[T]
-          case None => throw RuntimeException(content("errors").toString)
+          case None       => throw RuntimeException(content("errors").toString)
 
 class Result(data: ujson.Value) extends Selectable:
   def selectDynamic(name: String): Any =
@@ -80,10 +84,17 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
               case '[w] =>
                 Expr.summon[pytanie.Variable[w]] match
                   case Some(v) =>
-                    Param(name, '{ $v.graphqlType}, '{ $v.write($value.asInstanceOf[w]) })
+                    Param(
+                      name,
+                      '{ $v.graphqlType },
+                      '{ $v.write($value.asInstanceOf[w]) }
+                    )
                   case None =>
                     val tpeName = TypeRepr.of[t].show
-                    report.errorAndAbort(s"Variable instance not found for type $tpeName", par)
+                    report.errorAndAbort(
+                      s"Variable instance not found for type $tpeName",
+                      par
+                    )
 
   val text: String =
     interleave(parts, params.map("$" + _.name)).mkString.stripMargin
@@ -91,18 +102,28 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
   val model = parseQuery(text).get
 
   val newVariables = params.map: p =>
-      '{ VariableDefinition(${Expr(p.name)}, ${p.typeName}) }
+    '{ VariableDefinition(${ Expr(p.name) }, ${ p.typeName }) }
 
   val paramPairs = params.map: p =>
-    '{ ${Expr(p.name)} -> ${p.substitution} }
+    '{ ${ Expr(p.name) } -> ${ p.substitution } }
 
   val paramObj = '{ ujson.Obj.from(${ Expr.ofSeq(paramPairs) }) }
   prepareType(model.selectionSet).asType match
     case '[t] =>
-      '{ new PreparedQuery(${Expr(model)}, ${Expr.ofList(newVariables)}, $paramObj).asInstanceOf[PreparedQuery[t]] }
+      '{
+        new PreparedQuery(
+          ${ Expr(model) },
+          ${ Expr.ofList(newVariables) },
+          $paramObj
+        ).asInstanceOf[PreparedQuery[t]]
+      }
 end queryImpl
 
 private def interleave[A](left: Seq[A], right: Seq[A]): Seq[A] =
   left.map(Seq(_)).zipAll(right.map(Seq(_)), Nil, Nil).flatMap((l, r) => l ++ r)
 
-private case class Param(name: String, typeName: Expr[String], substitution: Expr[ujson.Value])
+private case class Param(
+    name: String,
+    typeName: Expr[String],
+    substitution: Expr[ujson.Value]
+)

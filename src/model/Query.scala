@@ -1,6 +1,7 @@
 package pytanie.model
 
 case class Query(
+    kind: Kind,
     name: Option[String],
     variables: Option[VariableDefinitions],
     selectionSet: SelectionSet
@@ -9,6 +10,9 @@ case class Query(
     val nameS = name.map(" " + _).getOrElse("")
     val varsS = variables.map(_.sendable).getOrElse("")
     s"query$nameS$varsS ${selectionSet.sendable}"
+
+enum Kind:
+  case Mutation, Query
 
 case class VariableDefinitions(vars: List[VariableDefinition]):
   def sendable = vars.map(_.sendable).mkString("(", ", ", ")")

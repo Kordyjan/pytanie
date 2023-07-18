@@ -14,6 +14,7 @@ class GraphqlParserSuite extends munit.FunSuite:
       |}""".stripMargin).assertMatch:
         case Some(
               Query(
+                Kind.Query,
                 None,
                 None,
                 SelectionSet(
@@ -41,6 +42,7 @@ class GraphqlParserSuite extends munit.FunSuite:
       |}""".stripMargin).assertMatch:
         case Some(
               Query(
+                Kind.Query,
                 None,
                 None,
                 SelectionSet(
@@ -107,6 +109,7 @@ class GraphqlParserSuite extends munit.FunSuite:
       |}""".stripMargin).assertMatch:
         case Some(
               Query(
+                Kind.Query,
                 Some("issues"),
                 Some(
                   VariableDefinitions(
@@ -180,6 +183,7 @@ class GraphqlParserSuite extends munit.FunSuite:
       |}""".stripMargin).assertMatch:
         case Some(
               Query(
+                Kind.Query,
                 None,
                 None,
                 SelectionSet(
@@ -227,3 +231,61 @@ class GraphqlParserSuite extends munit.FunSuite:
                 )
               )
             ) =>
+
+  test("mutation") {
+    parseQuery("""
+    |mutation {
+    |  updatePullRequest(
+    |    input: {pullRequestId: "PR_kwDOJ84k7M5Vx8Ao", milestoneId: "MI_kwDOJ84k7M4Ak4ai"}
+    |  ) {
+    |    clientMutationId
+    |  }
+    |}
+    """.stripMargin).assertMatch:
+      case Some(
+            Query(
+              Kind.Mutation,
+              None,
+              None,
+              SelectionSet(
+                List(
+                  Field(
+                    "updatePullRequest",
+                    Some(
+                      Arguments(
+                        List(
+                          Argument(
+                            "input",
+                            ObjectValue(
+                              List(
+                                ObjectField(
+                                  "pullRequestId",
+                                  StringValue("PR_kwDOJ84k7M5Vx8Ao")
+                                ),
+                                ObjectField(
+                                  "milestoneId",
+                                  StringValue("MI_kwDOJ84k7M4Ak4ai")
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    ),
+                    Some(
+                      SelectionSet(
+                        List(
+                          Field(
+                            "clientMutationId",
+                            None,
+                            None
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          ) =>
+  }

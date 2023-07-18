@@ -2,7 +2,6 @@
 //> using scala 3.3.0
 //> using toolkit latest
 
-
 package pytanie
 
 import sttp.client4._
@@ -14,7 +13,7 @@ import ujson.Value
 
   val myQuery = query"""
     |{
-    |  repository(name: ${ repoName }, owner: "lampepfl") {
+    |  repository(name: ${repoName}, owner: "lampepfl") {
     |    issues(
     |      first: ${number + 5},
     |      filterBy: {states: OPEN},

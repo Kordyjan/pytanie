@@ -8,9 +8,18 @@ def parseQuery(input: String): Option[Query] =
   query.lift(graphqlTokenizer(input)).map(_._2)
 
 private def query: ParserS[Query] =
-  ((just("query") +> identifier.?).? <+> varaibleDefinitions.? <+> selectionSet)
-    .map: (name, vars, set) =>
-      Query(name.flatten, vars, set)
+  operationDefinition
+    <|> selectionSet.map: set =>
+      Query(Kind.Query, None, None, set)
+
+private def operationDefinition: ParserS[Query] =
+  (operationKind <+> identifier.? <+> varaibleDefinitions.? <+> selectionSet)
+    .map: (kind, name, vars, set) =>
+      Query(kind, name, vars, set)
+
+private def operationKind: ParserS[Kind] =
+  just("query").map(_ => Kind.Query) <|>
+    just("mutation").map(_ => Kind.Mutation)
 
 private def varaibleDefinitions: ParserS[VariableDefinitions] =
   (just("(") +> variableDefinition.separatedBy(just(",")) <+ just(")"))
