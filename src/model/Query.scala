@@ -7,9 +7,12 @@ case class Query(
     selectionSet: SelectionSet
 ):
   def sendable: String =
+    val kindS = kind match
+      case Kind.Mutation => "mutation"
+      case Kind.Query    => "query"
     val nameS = name.map(" " + _).getOrElse("")
     val varsS = variables.map(_.sendable).getOrElse("")
-    s"query$nameS$varsS ${selectionSet.sendable}"
+    s"$kindS$nameS$varsS ${selectionSet.sendable}"
 
 enum Kind:
   case Mutation, Query
