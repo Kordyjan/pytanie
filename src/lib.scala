@@ -3,6 +3,7 @@ package pytanie
 import quoted.*
 import pytanie.parser.parseQuery
 import pytanie.model.*
+import pytanie.model.utils.*
 import compiletime.summonInline
 import sttp.client4._
 import ujson.Str
@@ -13,9 +14,9 @@ import sttp.model.Uri
 import ToExprModel.given
 
 class PreparedQuery[T](
-    query: Query,
-    injectedVars: List[VariableDefinition],
-    params: ujson.Value
+    private[pytanie] val query: Query,
+    private[pytanie] val injectedVars: List[VariableDefinition],
+    private[pytanie] val params: ujson.Value
 ):
   lazy val text = injectedVars match
     case Nil => query.sendable
@@ -37,16 +38,8 @@ class PreparedQuery[T](
       case Right(value) =>
         val content = ujson.read(value)
         content.obj.get("data") match
-          case Some(data) => Result(data).asInstanceOf[T]
+          case Some(data) => RootResult(data, query, url, username, token, injectedVars, params).asInstanceOf[T]
           case None       => throw RuntimeException(content("errors").toString)
-
-class Result(data: ujson.Value) extends Selectable:
-  def selectDynamic(name: String): Any =
-    data(name) match
-      case Str(value) => value
-      case Arr(value) => value.map(Result(_)).toList
-      case Num(value) => value.toString
-      case value      => Result(value)
 
 extension (inline con: StringContext)
   transparent inline def query(inline params: Any*) = ${
@@ -58,16 +51,27 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
 ): Expr[Any] =
   import quotes.reflect.*
 
-  def prepareType(set: SelectionSet): TypeRepr =
-    set.fields.foldLeft(TypeRepr.of[Result]): (acc, f) =>
-      val typ =
-        val inner = f.selectionSet match
-          case Some(selSet) => prepareType(selSet)
-          case None         => TypeRepr.of[String]
-        if Set("nodes", "edges").contains(f.name) then
-          TypeRepr.of[List].appliedTo(inner)
-        else inner
-      Refinement(acc, f.name, typ)
+  def prepareType(set: List[Field], arguments: List[Argument]): TypeRepr =
+    val typedFields: List[(String, TypeRepr)] =
+      set.map: f =>
+        val typ =
+          val inner = f.selectionSet match
+            case Some(selSet) =>
+              prepareType(selSet.fields, f.arguments.toList.flatMap(_.args))
+            case None => TypeRepr.of[String]
+          if Set("nodes", "edges").contains(f.name) then
+            TypeRepr.of[List].appliedTo(inner)
+          else inner
+        (f.name, typ)
+
+    val seed =
+      if isPaginated(set, arguments) then TypeRepr.of[PaginatedResult]
+      else TypeRepr.of[Result]
+
+    typedFields.foldLeft(seed):
+      case (acc, (name, typ)) =>
+        Refinement(acc, name, typ)
+  end prepareType
 
   val parts: Seq[String] = con match
     case '{ StringContext($t: _*) } =>
@@ -108,7 +112,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
     '{ ${ Expr(p.name) } -> ${ p.substitution } }
 
   val paramObj = '{ ujson.Obj.from(${ Expr.ofSeq(paramPairs) }) }
-  prepareType(model.selectionSet).asType match
+  prepareType(model.selectionSet.fields, Nil).asType match
     case '[t] =>
       '{
         new PreparedQuery(

@@ -1,4 +1,4 @@
-//> using files src
+//> using files src debugging.scala
 //> using scala 3.3.0
 //> using toolkit latest
 
@@ -6,6 +6,7 @@ package pytanie
 
 import sttp.client4._
 import ujson.Value
+import debugging.*
 
 @main def playground =
   val number = 15
@@ -28,15 +29,21 @@ import ujson.Value
     |          }
     |        }
     |      }
+    |      pageInfo {
+    |        hasNextPage
+    |        endCursor
+    |      }
     |    }
     |  }
     |}
   """
+  println(typeOf(myQuery))
+
   val res = myQuery.send(
     uri"https://api.github.com/graphql",
     "Kordyjan",
     os.read(os.pwd / os.up / "key.txt")
   )
-  val x = res.repository.issues.nodes.flatMap(_.labels.nodes).map(_.name).toSet
+  val x = res.repository.issues.nextPage.nodes.map(_.title)
 
   x.foreach(println)
