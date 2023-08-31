@@ -65,7 +65,11 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
         (f.name, typ)
 
     val seed =
-      if isPaginated(set, arguments) then TypeRepr.of[PaginatedResult]
+      if isPaginated(set, arguments) then
+        typedFields.find(_._1 == "nodes").get._2 match
+          case AppliedType(_, List(inner)) =>
+            TypeRepr.of[PaginatedResult].appliedTo(inner)
+          case _: TypeRepr => TypeRepr.of[Result]
       else TypeRepr.of[Result]
 
     typedFields.foldLeft(seed):

@@ -57,12 +57,26 @@ class RootResult(
     val newModel = model.copy(selectionSet = SelectionSet(newFields))
     PreparedQuery[Result](newModel, injectedVars, params).send(url, username, token).asInstanceOf[Result]
 
-class PaginatedResult(
+class PaginatedResult[T](
     private[pytanie] val data: ujson.Value,
     private[pytanie] val model: Field,
     private[pytanie] val parentF: Result
 ) extends Result:
   private[pytanie] def parent = Some(parentF)
+
+  def stream: LazyList[T] =
+    val lazyList: LazyList[ujson.Value] = LazyList.unfold((this, 0)): (page, n) =>
+      page.data("nodes") match
+        case Arr(nodes) =>
+            if (nodes.length > n)
+              then Some((nodes(n), (page, n + 1)))
+              else if page.data("pageInfo")("hasNextPage").bool then
+                val nextPage = page.nextPage
+                Some((page.nextPage.data("nodes")(0), (page.nextPage, 1)))
+              else None
+        case _ => throw IllegalStateException(s"${model.name} is not paginated")
+    val elemModel = model.get("nodes")
+    lazyList.map(FieldResult(_, elemModel, this).asInstanceOf[T])
 
   // temporary implementation copied from NormalResult
   // TODO: make it work for nested pages
@@ -76,7 +90,7 @@ class PaginatedResult(
 
 
 object PaginatedResult:
-  extension [T <: PaginatedResult](p: T)
+  extension [T <: PaginatedResult[?]](p: T)
     def nextPage: T =
       val name = p.model.name
       val endCursor = p.data("pageInfo")("endCursor").str
