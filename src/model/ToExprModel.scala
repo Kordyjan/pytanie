@@ -29,7 +29,22 @@ object ToExprModel:
 
   given ToExpr[SelectionSet] with
     def apply(s: SelectionSet)(using Quotes) =
-      '{ SelectionSet(${ Expr(s.fields) }) }
+      '{ SelectionSet(${ Expr(s.selections) }) }
+
+  given ToExpr[Selection] with
+    def apply(s: Selection)(using Quotes) = s match
+      case f: InlineFragment => summon[ToExpr[InlineFragment]](f)
+      case f: Field => summon[ToExpr[Field]](f)
+
+
+  given ToExpr[InlineFragment] with
+    def apply(f: InlineFragment)(using Quotes) =
+      '{
+        InlineFragment(
+          ${ Expr(f.conditionType) },
+          ${ Expr(f.selectionSet) }
+        )
+      }
 
   given ToExpr[Field] with
     def apply(f: Field)(using Quotes) =

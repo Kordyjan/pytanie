@@ -232,7 +232,7 @@ class GraphqlParserSuite extends munit.FunSuite:
             )
           ) =>
 
-  test("mutation") {
+  test("mutation"):
     parseQuery("""
     |mutation {
     |  updatePullRequest(
@@ -288,4 +288,115 @@ class GraphqlParserSuite extends munit.FunSuite:
               )
             )
           ) =>
-  }
+
+  test("inline fragment"):
+    parseQuery("""
+    |query {
+    |  organization(login: "lampepfl") {
+    |    projectV2(number: 6) {
+    |      items(first: 10) {
+    |        nodes {
+    |          content {
+    |            ... on PullRequest {
+    |              mergedAt
+    |            }
+    |          }
+    |        }
+    |      }
+    |    }
+    |  }
+    |}
+    """.stripMargin).assertMatch:
+      case Some(
+        Query(
+          Kind.Query,
+          None,
+          None,
+          SelectionSet(
+            List(
+              Field(
+                "organization",
+                Some(
+                  Arguments(
+                    List(
+                      Argument("login", StringValue("lampepfl"))
+                    )
+                  )
+                ),
+                Some(
+                  SelectionSet(
+                    List(
+                      Field(
+                        "projectV2",
+                        Some(
+                          Arguments(
+                            List(
+                              Argument("number", IntValue(6))
+                            )
+                          )
+                        ),
+                        Some(
+                          SelectionSet(
+                            List(
+                              Field(
+                                "items",
+                                Some(
+                                  Arguments(
+                                    List(
+                                      Argument("first", IntValue(10))
+                                    )
+                                  )
+                                ),
+                                Some(
+                                  SelectionSet(
+                                    List(
+                                      Field(
+                                        "nodes",
+                                        None,
+                                        Some(
+                                          SelectionSet(
+                                            List(
+                                              Field(
+                                                "content",
+                                                None,
+                                                Some(
+                                                  SelectionSet(
+                                                    List(
+                                                      InlineFragment(
+                                                        "PullRequest",
+                                                        SelectionSet(
+                                                          List(
+                                                            Field(
+                                                              "mergedAt",
+                                                              None,
+                                                              None
+                                                            )
+                                                          )
+                                                        )
+                                                      )
+                                                    )
+                                                  )
+                                                )
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      ) =>
+
+

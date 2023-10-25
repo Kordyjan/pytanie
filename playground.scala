@@ -14,25 +14,20 @@ import debugging.*
   val repoName = "dotty"
 
   val myQuery = query"""
-    |{
-    |  repository(name: ${repoName}, owner: "lampepfl") {
-    |    issues(
-    |      first: ${number},
-    |      filterBy: {states: OPEN},
-    |      orderBy: {field: CREATED_AT, direction: DESC}
-    |    ) {
-    |      nodes {
-    |        number
-    |        title
-    |        labels(first: 10) {
-    |          nodes {
-    |            name
+    |query {
+    |  organization(login: "lampepfl") {
+    |    projectV2(number: 6) {
+    |      items(first: 10) {
+    |        nodes {
+    |          content {
+    |            __typename
+    |            ... on PullRequest {
+    |              mergedAt
+    |              id
+    |              number
+    |            }
     |          }
     |        }
-    |      }
-    |      pageInfo {
-    |        hasNextPage
-    |        endCursor
     |      }
     |    }
     |  }
@@ -45,6 +40,6 @@ import debugging.*
     "Kordyjan",
     os.read(os.pwd / os.up / "key.txt")
   )
-  val x = res.repository.issues.stream.map(_.title).take(30)
-
-  x.foreach(println)
+  val x = res.organization.projectV2.items.nodes.map(_.content.asPullRequest).collect:
+    case Some(pr) => (pr.number.toDouble.toInt, pr.mergedAt)
+  println(x)

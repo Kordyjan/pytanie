@@ -29,8 +29,15 @@ private def variableDefinition: ParserS[VariableDefinition] =
   (just("$") +> (identifier <+ just(":")) <+> typ).map(VariableDefinition(_, _))
 
 private def selectionSet: ParserS[SelectionSet] =
-  (just("{") +> field.* <+ just("}"))
+  (just("{") +> selection.* <+ just("}"))
     .map(SelectionSet(_))
+
+private def selection: ParserS[Selection] =
+  inlineFragment <|> field
+
+private def inlineFragment: ParserS[InlineFragment] =
+  (just("...") +> just("on") +> typ <+> selectionSet).map: (typ, set) =>
+    InlineFragment(typ, set)
 
 private def field: ParserS[Field] =
   (identifier <+> arguments.? <+> selectionSet.?)
@@ -71,7 +78,7 @@ private def typ: ParserS[String] =
     id + nn.getOrElse("")
 
 private def identifier: ParserS[String] =
-  case head &: tail if head(0).isLetter => (tail, head)
+  case head &: tail if head(0).isLetter | head.startsWith("__") => (tail, head)
 
 private def int: ParserS[Int] =
   case num &: tail if num.forall(_.isDigit) => (tail, num.toInt)

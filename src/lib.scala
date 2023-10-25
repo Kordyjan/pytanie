@@ -51,18 +51,26 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
 ): Expr[Any] =
   import quotes.reflect.*
 
-  def prepareType(set: List[Field], arguments: List[Argument]): TypeRepr =
+  def prepareType(set: List[Selection], arguments: List[Argument]): TypeRepr =
     val typedFields: List[(String, TypeRepr)] =
-      set.map: f =>
-        val typ =
-          val inner = f.selectionSet match
-            case Some(selSet) =>
-              prepareType(selSet.fields, f.arguments.toList.flatMap(_.args))
-            case None => TypeRepr.of[String]
-          if Set("nodes", "edges").contains(f.name) then
-            TypeRepr.of[List].appliedTo(inner)
-          else inner
-        (f.name, typ)
+      set.collect:
+        case f: Field =>
+          val typ =
+            val inner = f.selectionSet match
+              case Some(selSet) =>
+                prepareType(selSet.selections, f.arguments.toList.flatMap(_.args))
+              case None => TypeRepr.of[String]
+            if Set("nodes", "edges").contains(f.name) then
+              TypeRepr.of[List].appliedTo(inner)
+            else inner
+          (f.name, typ)
+
+    val unionSelectors: List[(String, TypeRepr)] =
+      if isUnion(set) then
+        set.collect:
+          case f: InlineFragment =>
+            (s"as${f.conditionType}", TypeRepr.of[Option].appliedTo(prepareType(f.selectionSet.selections, Nil)))
+      else Nil
 
     val seed =
       if isPaginated(set, arguments) then
@@ -72,7 +80,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
           case _: TypeRepr => TypeRepr.of[Result]
       else TypeRepr.of[Result]
 
-    typedFields.foldLeft(seed):
+    (typedFields ++ unionSelectors).foldLeft(seed):
       case (acc, (name, typ)) =>
         Refinement(acc, name, typ)
   end prepareType
@@ -116,7 +124,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
     '{ ${ Expr(p.name) } -> ${ p.substitution } }
 
   val paramObj = '{ ujson.Obj.from(${ Expr.ofSeq(paramPairs) }) }
-  prepareType(model.selectionSet.fields, Nil).asType match
+  prepareType(model.selectionSet.selections, Nil).asType match
     case '[t] =>
       '{
         new PreparedQuery(

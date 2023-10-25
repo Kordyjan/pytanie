@@ -23,14 +23,20 @@ case class VariableDefinitions(vars: List[VariableDefinition]):
 case class VariableDefinition(name: String, typ: String):
   def sendable = "$" + s"$name: $typ"
 
-case class SelectionSet(fields: List[Field]):
-  def sendable = fields.map(_.sendable).mkString("{ ", " ", " }")
+case class SelectionSet(selections: List[Selection]):
+  def sendable = selections.map(_.sendable).mkString("{ ", " ", " }")
+
+sealed trait Selection:
+  def sendable: String
+
+case class InlineFragment(conditionType: String, selectionSet: SelectionSet) extends Selection:
+  def sendable = s"... on $conditionType ${selectionSet.sendable}"
 
 case class Field(
     name: String,
     arguments: Option[Arguments],
     selectionSet: Option[SelectionSet]
-):
+) extends Selection :
   def sendable: String =
     val args = arguments.map(_.sendable).getOrElse("")
     val sels = selectionSet.map(s => s" ${s.sendable}").getOrElse("")
