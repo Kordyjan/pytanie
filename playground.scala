@@ -17,14 +17,18 @@ import debugging.*
     |query {
     |  organization(login: "lampepfl") {
     |    projectV2(number: 6) {
-    |      items(first: 10) {
+    |    	items(first: 10) {
+    |        pageInfo {
+    |          hasNextPage
+    |          endCursor
+    |        }
     |        nodes {
+    |          id
     |          content {
     |            __typename
     |            ... on PullRequest {
-    |              mergedAt
-    |              id
     |              number
+    |              mergedAt
     |            }
     |          }
     |        }
@@ -40,6 +44,12 @@ import debugging.*
     "Kordyjan",
     os.read(os.pwd / os.up / "key.txt")
   )
-  val x = res.organization.projectV2.items.nodes.map(_.content.asPullRequest).collect:
-    case Some(pr) => (pr.number.toDouble.toInt, pr.mergedAt)
-  println(x)
+  val x = res.organization.projectV2.items.stream
+    .take(30)
+    .map(_.content.asPullRequest)
+    .collect:
+      case Some(pr) => s"#${pr.number.toDouble.toInt}: ${pr.mergedAt}"
+    .zipWithIndex
+    .map: (str, i) =>
+      s"${i + 1}. $str"
+    .foreach(println)

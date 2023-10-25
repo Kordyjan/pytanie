@@ -27,21 +27,20 @@ extension (f: Field)
 extension (m: Selection | Query)
   private[pytanie] def getField(name: String): Field =
     m.match
-      case f: Field => f.setFlattened
+      case f: Field          => f.setFlattened
       case f: InlineFragment => f.selectionSet.fields
-      case q: Query => q.selectionSet.fields
+      case q: Query          => q.selectionSet.fields
     .find(_.name == name)
-    .get
+      .get
 
   private[pytanie] def getFragment(name: String): InlineFragment =
     m.match
-      case q: Query => q.selectionSet.selections
-      case f: Field => f.selectionSet.toList.flatMap(_.selections)
+      case q: Query          => q.selectionSet.selections
+      case f: Field          => f.selectionSet.toList.flatMap(_.selections)
       case f: InlineFragment => f.selectionSet.selections
     .collectFirst:
-      case frag: InlineFragment if frag.conditionType == name => frag
+        case frag: InlineFragment if frag.conditionType == name => frag
     .get
-
 
 private[pytanie] def isPaginated(
     set: List[Selection],
@@ -51,11 +50,11 @@ private[pytanie] def isPaginated(
     case f: Field => f
 
   arguments.exists(_.name == "first")
-    && fields.exists(_.name == "nodes")
-    && fields.exists: f =>
-      f.name == "pageInfo"
-        && f.selectionSet.exists(_.fields.exists(_.name == "hasNextPage"))
-        && f.selectionSet.exists(_.fields.exists(_.name == "endCursor"))
+  && fields.exists(_.name == "nodes")
+  && fields.exists: f =>
+    f.name == "pageInfo"
+      && f.selectionSet.exists(_.fields.exists(_.name == "hasNextPage"))
+      && f.selectionSet.exists(_.fields.exists(_.name == "endCursor"))
 
 private[pytanie] def isUnion(set: List[Selection]): Boolean =
   val hasTypename = set
@@ -74,6 +73,5 @@ extension (set: SelectionSet)
 
 extension (s: Selection)
   def label = s match
-    case f: Field => f.name
+    case f: Field          => f.name
     case f: InlineFragment => f.conditionType
-

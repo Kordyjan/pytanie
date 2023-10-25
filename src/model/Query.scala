@@ -29,14 +29,15 @@ case class SelectionSet(selections: List[Selection]):
 sealed trait Selection:
   def sendable: String
 
-case class InlineFragment(conditionType: String, selectionSet: SelectionSet) extends Selection:
+case class InlineFragment(conditionType: String, selectionSet: SelectionSet)
+    extends Selection:
   def sendable = s"... on $conditionType ${selectionSet.sendable}"
 
 case class Field(
     name: String,
     arguments: Option[Arguments],
     selectionSet: Option[SelectionSet]
-) extends Selection :
+) extends Selection:
   def sendable: String =
     val args = arguments.map(_.sendable).getOrElse("")
     val sels = selectionSet.map(s => s" ${s.sendable}").getOrElse("")

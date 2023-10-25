@@ -34,8 +34,7 @@ object ToExprModel:
   given ToExpr[Selection] with
     def apply(s: Selection)(using Quotes) = s match
       case f: InlineFragment => summon[ToExpr[InlineFragment]](f)
-      case f: Field => summon[ToExpr[Field]](f)
-
+      case f: Field          => summon[ToExpr[Field]](f)
 
   given ToExpr[InlineFragment] with
     def apply(f: InlineFragment)(using Quotes) =

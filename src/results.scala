@@ -26,7 +26,8 @@ trait Result extends Selectable:
           case Str(value) => value
           case Arr(value) => value.map(FieldResult(_, field, this)).toList
           case Num(value) => value.toString
-          case value if isPaginated(field.setFlattened, field.argumentsFlattened) =>
+          case value
+              if isPaginated(field.setFlattened, field.argumentsFlattened) =>
             PaginatedResult(value, field, this)
           case value => FieldResult(value, field, this)
 end Result
@@ -44,7 +45,10 @@ class FieldResult(
       case f if f.label == name => field
       case f                    => f
     val newSelf = model.copy(selectionSet = Some(SelectionSet(newFields)))
-    parentF.resendPatched(selfName, newSelf).selectDynamic(selfName).asInstanceOf[Result]
+    parentF
+      .resendPatched(selfName, newSelf)
+      .selectDynamic(selfName)
+      .asInstanceOf[Result]
 
 class RootResult(
     private[pytanie] val data: ujson.Value,
@@ -62,7 +66,9 @@ class RootResult(
       case f if f.label == name => field
       case f                    => f
     val newModel = model.copy(selectionSet = SelectionSet(newFields))
-    PreparedQuery[Result](newModel, injectedVars, params).send(url, username, token).asInstanceOf[Result]
+    PreparedQuery[Result](newModel, injectedVars, params)
+      .send(url, username, token)
+      .asInstanceOf[Result]
 
 class FragmentResult(
     private[pytanie] val data: ujson.Value,
@@ -77,7 +83,10 @@ class FragmentResult(
       case f if f.label == name => field
       case f                    => f
     val newSelf = model.copy(selectionSet = SelectionSet(newFields))
-    parentF.resendPatched(selfName, newSelf).selectDynamic(selfName).asInstanceOf[Result]
+    parentF
+      .resendPatched(selfName, newSelf)
+      .selectDynamic(selfName)
+      .asInstanceOf[Result]
 
 class PaginatedResult[T](
     private[pytanie] val data: ujson.Value,
@@ -87,29 +96,33 @@ class PaginatedResult[T](
   private[pytanie] def parent = Some(parentF)
 
   def stream: LazyList[T] =
-    val lazyList: LazyList[ujson.Value] = LazyList.unfold((this, 0)): (page, n) =>
-      page.data("nodes") match
-        case Arr(nodes) =>
+    val lazyList: LazyList[ujson.Value] = LazyList.unfold((this, 0)):
+      (page, n) =>
+        page.data("nodes") match
+          case Arr(nodes) =>
             if (nodes.length > n)
-              then Some((nodes(n), (page, n + 1)))
-              else if page.data("pageInfo")("hasNextPage").bool then
-                val nextPage = page.nextPage
-                Some((page.nextPage.data("nodes")(0), (page.nextPage, 1)))
-              else None
-        case _ => throw IllegalStateException(s"${model.name} is not paginated")
+            then Some((nodes(n), (page, n + 1)))
+            else if page.data("pageInfo")("hasNextPage").bool then
+              val nextPage = page.nextPage
+              Some((page.nextPage.data("nodes")(0), (page.nextPage, 1)))
+            else None
+          case _ =>
+            throw IllegalStateException(s"${model.name} is not paginated")
     val elemModel = model.getField("nodes")
     lazyList.map(FieldResult(_, elemModel, this).asInstanceOf[T])
 
   // temporary implementation copied from NormalResult
   // TODO: make it work for nested pages
   private[pytanie] def resendPatched(name: String, field: Selection): Result =
-      val selfName = model.name
-      val newFields = model.selectionSet.get.fields.map:
-        case f if f.label == name => field
-        case f                    => f
-      val newSelf = model.copy(selectionSet = Some(SelectionSet(newFields)))
-      parentF.resendPatched(selfName, newSelf).selectDynamic(selfName).asInstanceOf[Result]
-
+    val selfName = model.name
+    val newFields = model.selectionSet.get.fields.map:
+      case f if f.label == name => field
+      case f                    => f
+    val newSelf = model.copy(selectionSet = Some(SelectionSet(newFields)))
+    parentF
+      .resendPatched(selfName, newSelf)
+      .selectDynamic(selfName)
+      .asInstanceOf[Result]
 
 object PaginatedResult:
   extension [T <: PaginatedResult[?]](p: T)
@@ -117,4 +130,7 @@ object PaginatedResult:
       val name = p.model.name
       val endCursor = p.data("pageInfo")("endCursor").str
       val newModel = p.model.withArgument("after", endCursor)
-      p.parentF.resendPatched(name, newModel).selectDynamic(name).asInstanceOf[T]
+      p.parentF
+        .resendPatched(name, newModel)
+        .selectDynamic(name)
+        .asInstanceOf[T]

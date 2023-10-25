@@ -38,8 +38,10 @@ class PreparedQuery[T](
       case Right(value) =>
         val content = ujson.read(value)
         content.obj.get("data") match
-          case Some(data) => RootResult(data, query, url, username, token, injectedVars, params).asInstanceOf[T]
-          case None       => throw RuntimeException(content("errors").toString)
+          case Some(data) =>
+            RootResult(data, query, url, username, token, injectedVars, params)
+              .asInstanceOf[T]
+          case None => throw RuntimeException(content("errors").toString)
 
 extension (inline con: StringContext)
   transparent inline def query(inline params: Any*) = ${
@@ -58,7 +60,10 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
           val typ =
             val inner = f.selectionSet match
               case Some(selSet) =>
-                prepareType(selSet.selections, f.arguments.toList.flatMap(_.args))
+                prepareType(
+                  selSet.selections,
+                  f.arguments.toList.flatMap(_.args)
+                )
               case None => TypeRepr.of[String]
             if Set("nodes", "edges").contains(f.name) then
               TypeRepr.of[List].appliedTo(inner)
@@ -69,7 +74,12 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
       if isUnion(set) then
         set.collect:
           case f: InlineFragment =>
-            (s"as${f.conditionType}", TypeRepr.of[Option].appliedTo(prepareType(f.selectionSet.selections, Nil)))
+            (
+              s"as${f.conditionType}",
+              TypeRepr
+                .of[Option]
+                .appliedTo(prepareType(f.selectionSet.selections, Nil))
+            )
       else Nil
 
     val seed =
