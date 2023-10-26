@@ -2,7 +2,7 @@
 //> using jvm "8"
 
 //> using option -Wunused:all -Wvalue-discard
-//> using toolkit 0.2.0
+//> using toolkit 0.2.1
 
 //> using exclude playground.scala
 
