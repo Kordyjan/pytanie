@@ -12,6 +12,8 @@ import ujson.Arr
 import ujson.Num
 import sttp.model.Uri
 import ToExprModel.given
+import scala.concurrent.duration.*
+import scala.util.hashing.Hashing.Default
 
 class PreparedQuery[T](
     private[pytanie] val query: Query,
@@ -29,10 +31,11 @@ class PreparedQuery[T](
     val data = ujson.Obj("query" -> text, "variables" -> params)
     val response = basicRequest
       .post(url)
+      .readTimeout(3.minutes)
       .auth
       .basic(username, token)
       .body(data.toString)
-      .send(DefaultSyncBackend())
+      .send(DefaultSyncBackend(BackendOptions.connectionTimeout(5.minutes)))
     response.body.match
       case Left(value) => throw RuntimeException(value)
       case Right(value) =>
