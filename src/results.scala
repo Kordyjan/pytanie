@@ -12,24 +12,30 @@ trait Result extends Selectable:
 
   private[pytanie] def resendPatched(name: String, field: Selection): Result
 
+  private lazy val fragmentNames = model
+    .match
+      case Field(_, _, Some(set)) => set.selections.collect:
+        case f: InlineFragment => "as" + f.conditionType
+      case _ => Nil
+    .toSet
+
   def selectDynamic(name: String): Any =
-    val fragment = """as(\w+)""".r
-    name match
-      case fragment(typ) =>
-        if data("__typename").str == typ then
-          val fragment = model.getFragment(typ)
-          Some(FragmentResult(data, fragment, this))
-        else None
-      case _ =>
-        val field = model.getField(name)
-        data(name) match
-          case Str(value) => value
-          case Arr(value) => value.map(FieldResult(_, field, this)).toList
-          case Num(value) => value.toString
-          case value
-              if isPaginated(field.setFlattened, field.argumentsFlattened) =>
-            PaginatedResult(value, field, this)
-          case value => FieldResult(value, field, this)
+    if fragmentNames.contains(name) then
+      val typ = name.drop(2)
+      if data("__typename").str == typ then
+        val fragment = model.getFragment(typ)
+        Some(FragmentResult(data, fragment, this))
+      else None
+    else
+      val field = model.getField(name)
+      data(name) match
+        case Str(value) => value
+        case Arr(value) => value.map(FieldResult(_, field, this)).toList
+        case Num(value) => value.toString
+        case value
+            if isPaginated(field.setFlattened, field.argumentsFlattened) =>
+          PaginatedResult(value, field, this)
+        case value => FieldResult(value, field, this)
 end Result
 
 class FieldResult(
