@@ -71,6 +71,8 @@ object ToExprModel:
       case EnumValue(name)    => '{ EnumValue(${ Expr(name) }) }
       case ObjectValue(fields) =>
         '{ ObjectValue(${ Expr.ofList(fields.map(Expr(_))) }) }
+      case ListValue(values) =>
+        '{ ListValue(${ Expr.ofList(values.map(Expr(_))) }) }
 
   given ToExpr[ObjectField] with
     def apply(o: ObjectField)(using Quotes) =

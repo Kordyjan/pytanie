@@ -71,5 +71,12 @@ case class ObjectValue(fields: List[ObjectField]) extends Value:
       val fielsS = fields.map(_.sendable).mkString(", ")
       s"{ $fielsS }"
 
+case class ListValue(values: List[Value]) extends Value:
+  override def sendable: String =
+    if values.isEmpty then "[]"
+    else
+      val valuesS = values.map(_.sendable).mkString(", ")
+      s"[ $valuesS ]"
+
 case class ObjectField(name: String, value: Value):
   def sendable = s"$name: ${value.sendable}"

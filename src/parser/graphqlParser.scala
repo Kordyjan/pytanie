@@ -52,7 +52,7 @@ private def argument: ParserS[Argument] =
     Argument(name, value)
 
 private def value: ParserS[Value] =
-  intValue <|> stringValue <|> variable <|> objectValue <|> enumValue
+  intValue <|> stringValue <|> variable <|> objectValue <|> enumValue <|> listValue
 
 private def intValue: ParserS[IntValue] = int.map(IntValue(_))
 
@@ -70,6 +70,10 @@ private def objectValue: ParserS[ObjectValue] =
   (just("{") +> objectField.separatedBy(just(",")) <+ just("}"))
     .map(ObjectValue(_))
 
+private def listValue: ParserS[ListValue] =
+  (debug +> just("[") +> value.separatedBy(just(",")) <+ just("]"))
+    .map(ListValue(_))
+
 private def objectField: ParserS[ObjectField] =
   ((identifier <+ just(":")) <+> value).map(ObjectField(_, _))
 
@@ -82,3 +86,9 @@ private def identifier: ParserS[String] =
 
 private def int: ParserS[Int] =
   case num &: tail if num.forall(_.isDigit) => (tail, num.toInt)
+
+
+private def debug: ParserS[Unit] =
+  case list =>
+    println(list.take(10))
+    (list, ())

@@ -398,3 +398,70 @@ class GraphqlParserSuite extends munit.FunSuite:
               )
             )
           ) =>
+
+  test("list value"):
+    parseQuery("""
+    |query {
+    |  repository(name: "dotty", owner: "lampepfl") {
+    |    issues(first: 10, filterBy: {states: [OPEN, CLOSED]}) {
+    |      nodes {
+    |        title
+    |      }
+    |    }
+    |  }
+    |}""".stripMargin).assertMatch:
+      case Some(
+            Query(
+              Kind.Query,
+              None,
+              None,
+              SelectionSet(
+                List(
+                  Field(
+                    "repository",
+                    Some(
+                      Arguments(
+                        List(
+                          Argument("name", StringValue("dotty")),
+                          Argument("owner", StringValue("lampepfl"))
+                        )
+                      )
+                    ),
+                    Some(
+                      SelectionSet(
+                        List(
+                          Field(
+                            "issues",
+                            Some(
+                              Arguments(
+                                List(
+                                  Argument("first", IntValue(10)),
+                                  Argument(
+                                    "filterBy",
+                                    ObjectValue(
+                                      List(
+                                        ObjectField(
+                                          "states",
+                                          ListValue(
+                                            List(
+                                              EnumValue("OPEN"),
+                                              EnumValue("CLOSED")
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            ),
+                            Some(_)
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+      ) =>

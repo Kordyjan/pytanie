@@ -1,5 +1,5 @@
 //> using scala 3.3.0
-//> using jvm "8"
+//> using jvm "11"
 
 //> using option -Wunused:all -Wvalue-discard
 //> using toolkit 0.2.1
