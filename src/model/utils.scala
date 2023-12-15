@@ -31,7 +31,9 @@ extension (m: Selection | Query)
       case f: InlineFragment => f.selectionSet.fields
       case q: Query          => q.selectionSet.fields
     .find(_.name == name)
-      .get
+    .match
+      case None => throw new Exception(s"Field $name not found")
+      case Some(f) => f
 
   private[pytanie] def getFragment(name: String): InlineFragment =
     m.match

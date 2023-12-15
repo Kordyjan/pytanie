@@ -36,6 +36,8 @@ trait Result extends Selectable:
             if isPaginated(field.setFlattened, field.argumentsFlattened) =>
           PaginatedResult(value, field, this)
         case value => FieldResult(value, field, this)
+
+  def debug: String = data.toString
 end Result
 
 class FieldResult(
