@@ -4,6 +4,7 @@ import model.*
 import model.utils.*
 import ujson.*
 import sttp.model.Uri
+import scala.util.chaining.*
 
 trait Result extends Selectable:
   private[pytanie] def data: ujson.Value
@@ -93,8 +94,9 @@ class FragmentResult(
     val newSelf = model.copy(selectionSet = SelectionSet(newFields))
     parentF
       .resendPatched(selfName, newSelf)
-      .selectDynamic(selfName)
-      .asInstanceOf[Result]
+      .selectDynamic("as" + selfName)
+      .asInstanceOf[Option[Result]]
+      .get
 
 class PaginatedResult[T](
     private[pytanie] val data: ujson.Value,
@@ -112,7 +114,7 @@ class PaginatedResult[T](
             then Some((nodes(n), (page, n + 1)))
             else if page.data("pageInfo")("hasNextPage").bool then
               val nextPage = page.nextPage
-              Some((page.nextPage.data("nodes")(0), (page.nextPage, 1)))
+              Some((nextPage.data("nodes")(0), (nextPage, 1)))
             else None
           case _ =>
             throw IllegalStateException(s"${model.name} is not paginated")
@@ -140,5 +142,6 @@ object PaginatedResult:
       val newModel = p.model.withArgument("after", endCursor)
       p.parentF
         .resendPatched(name, newModel)
+        .tap(r => println("--" + r.data))
         .selectDynamic(name)
         .asInstanceOf[T]
