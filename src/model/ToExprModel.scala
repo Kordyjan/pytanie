@@ -49,6 +49,7 @@ object ToExprModel:
     def apply(f: Field)(using Quotes) =
       '{
         Field(
+          ${ Expr(f.alias) },
           ${ Expr(f.name) },
           ${ Expr(f.arguments) },
           ${ Expr(f.selectionSet) }

@@ -17,7 +17,7 @@ import debugging.*
     |query {
     |  organization(login: "lampepfl") {
     |    projectV2(number: 6) {
-    |    	items(first: 10) {
+    |    	i: items(first: 10) {
     |        pageInfo {
     |          hasNextPage
     |          endCursor
@@ -27,8 +27,8 @@ import debugging.*
     |          content {
     |            __typename
     |            ... on PullRequest {
-    |              number
-    |              mergedAt
+    |              n: number
+    |              m: mergedAt
     |            }
     |          }
     |        }
@@ -44,11 +44,11 @@ import debugging.*
     "Kordyjan",
     os.read(os.pwd / os.up / "key.txt")
   )
-  val x = res.organization.projectV2.items.stream
+  val x = res.organization.projectV2.i.stream
     .take(30)
     .map(_.content.asPullRequest)
     .collect:
-      case Some(pr) => s"#${pr.number.toDouble.toInt}: ${pr.mergedAt}"
+      case Some(pr) => s"#${pr.n.toDouble.toInt}: ${pr.m}"
     .zipWithIndex
     .map: (str, i) =>
       s"${i + 1}. $str"

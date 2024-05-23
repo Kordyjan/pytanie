@@ -44,7 +44,7 @@ class PreparedQuery[T](
           case Some(data) =>
             RootResult(data, query, url, username, token, injectedVars, params)
               .asInstanceOf[T]
-          case None => throw RuntimeException(content("errors").toString)
+          case None => throw RuntimeException(content("errors").toString + "\n\n" + text)
 
 extension (inline con: StringContext)
   transparent inline def query(inline params: Any*) = ${
@@ -71,7 +71,7 @@ private def queryImpl(con: Expr[StringContext], paramExprs: Expr[Seq[Any]])(
             if Set("nodes", "edges").contains(f.name) then
               TypeRepr.of[List].appliedTo(inner)
             else inner
-          (f.name, typ)
+          (f.effectiveName, typ)
 
     val unionSelectors: List[(String, TypeRepr)] =
       if isUnion(set) then

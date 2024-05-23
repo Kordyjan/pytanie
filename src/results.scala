@@ -15,7 +15,7 @@ trait Result extends Selectable:
 
   private lazy val fragmentNames = model
     .match
-      case Field(_, _, Some(set)) => set.selections.collect:
+      case Field(_, _, _, Some(set)) => set.selections.collect:
         case f: InlineFragment => "as" + f.conditionType
       case _ => Nil
     .toSet
@@ -138,10 +138,10 @@ object PaginatedResult:
   extension [T <: PaginatedResult[?]](p: T)
     def nextPage: T =
       val name = p.model.name
+      val effectiveName = p.model.effectiveName
       val endCursor = p.data("pageInfo")("endCursor").str
       val newModel = p.model.withArgument("after", endCursor)
       p.parentF
         .resendPatched(name, newModel)
-        .tap(r => println("--" + r.data))
-        .selectDynamic(name)
+        .selectDynamic(effectiveName)
         .asInstanceOf[T]

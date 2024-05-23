@@ -1,6 +1,8 @@
 package pytanie.parser
 
 import pytanie.model.*
+import sttp.client4.internal.Parser
+import ujson.Str
 
 private type ParserS[E] = Parser[String, E]
 
@@ -40,9 +42,12 @@ private def inlineFragment: ParserS[InlineFragment] =
     InlineFragment(typ, set)
 
 private def field: ParserS[Field] =
-  (identifier <+> arguments.? <+> selectionSet.?)
-    .map: (name, args, set) =>
-      Field(name, args, set)
+  (alias.? <+> identifier <+> arguments.? <+> selectionSet.?)
+    .map: (al, name, args, set) =>
+      Field(al, name, args, set)
+
+private def alias: ParserS[String] =
+  identifier <+ just(":")
 
 private def arguments: ParserS[Arguments] =
   (just("(") +> argument.separatedBy(just(",")) <+ just(")")).map(Arguments(_))

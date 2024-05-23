@@ -34,14 +34,18 @@ case class InlineFragment(conditionType: String, selectionSet: SelectionSet)
   def sendable = s"... on $conditionType ${selectionSet.sendable}"
 
 case class Field(
+    alias: Option[String],
     name: String,
     arguments: Option[Arguments],
     selectionSet: Option[SelectionSet]
 ) extends Selection:
+  lazy val effectiveName = alias.getOrElse(name)
+
   def sendable: String =
+    val al = alias.map(_ + ": ").getOrElse("")
     val args = arguments.map(_.sendable).getOrElse("")
     val sels = selectionSet.map(s => s" ${s.sendable}").getOrElse("")
-    s"$name$args$sels"
+    s"$al$name$args$sels"
 
 case class Arguments(args: List[Argument]):
   def sendable = args.map(_.sendable).mkString("(", ", ", ")")

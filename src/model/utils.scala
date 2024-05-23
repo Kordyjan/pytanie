@@ -30,7 +30,7 @@ extension (m: Selection | Query)
       case f: Field          => f.setFlattened
       case f: InlineFragment => f.selectionSet.fields
       case q: Query          => q.selectionSet.fields
-    .find(_.name == name)
+    .find(_.effectiveName == name)
     .match
       case None => throw new Exception(s"Field $name not found in $m")
       case Some(f) => f

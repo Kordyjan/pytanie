@@ -20,9 +20,10 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "viewer",
                     None,
-                    Some(SelectionSet(List(Field(login, None, None))))
+                    Some(SelectionSet(List(Field(None, login, None, None))))
                   )
                 )
               )
@@ -48,6 +49,7 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "repository",
                     Some(
                       Arguments(
@@ -61,6 +63,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                       SelectionSet(
                         List(
                           Field(
+                            None,
                             "issues",
                             Some(
                               Arguments(
@@ -73,12 +76,13 @@ class GraphqlParserSuite extends munit.FunSuite:
                               SelectionSet(
                                 List(
                                   Field(
+                                    None,
                                     "nodes",
                                     None,
                                     Some(
                                       SelectionSet(
                                         List(
-                                          Field(title, None, None)
+                                          Field(None, title, None, None)
                                         )
                                       )
                                     )
@@ -122,6 +126,7 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "repository",
                     Some(
                       Arguments(
@@ -135,6 +140,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                       SelectionSet(
                         List(
                           Field(
+                            None,
                             "issues",
                             Some(
                               Arguments(
@@ -147,12 +153,13 @@ class GraphqlParserSuite extends munit.FunSuite:
                               SelectionSet(
                                 List(
                                   Field(
+                                    None,
                                     "nodes",
                                     None,
                                     Some(
                                       SelectionSet(
                                         List(
-                                          Field(title, None, None)
+                                          Field(None, title, None, None)
                                         )
                                       )
                                     )
@@ -189,6 +196,7 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "repository",
                     Some(
                       Arguments(
@@ -202,6 +210,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                       SelectionSet(
                         List(
                           Field(
+                            None,
                             "issues",
                             Some(
                               Arguments(
@@ -250,6 +259,7 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "updatePullRequest",
                     Some(
                       Arguments(
@@ -276,6 +286,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                       SelectionSet(
                         List(
                           Field(
+                            None,
                             "clientMutationId",
                             None,
                             None
@@ -315,6 +326,7 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "organization",
                     Some(
                       Arguments(
@@ -327,6 +339,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                       SelectionSet(
                         List(
                           Field(
+                            None,
                             "projectV2",
                             Some(
                               Arguments(
@@ -339,6 +352,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                               SelectionSet(
                                 List(
                                   Field(
+                                    None,
                                     "items",
                                     Some(
                                       Arguments(
@@ -351,12 +365,14 @@ class GraphqlParserSuite extends munit.FunSuite:
                                       SelectionSet(
                                         List(
                                           Field(
+                                            None,
                                             "nodes",
                                             None,
                                             Some(
                                               SelectionSet(
                                                 List(
                                                   Field(
+                                                    None,
                                                     "content",
                                                     None,
                                                     Some(
@@ -367,6 +383,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                                                             SelectionSet(
                                                               List(
                                                                 Field(
+                                                                  None,
                                                                   "mergedAt",
                                                                   None,
                                                                   None
@@ -418,6 +435,7 @@ class GraphqlParserSuite extends munit.FunSuite:
               SelectionSet(
                 List(
                   Field(
+                    None,
                     "repository",
                     Some(
                       Arguments(
@@ -431,6 +449,7 @@ class GraphqlParserSuite extends munit.FunSuite:
                       SelectionSet(
                         List(
                           Field(
+                            None,
                             "issues",
                             Some(
                               Arguments(
@@ -465,3 +484,35 @@ class GraphqlParserSuite extends munit.FunSuite:
               )
             )
       ) =>
+
+  test("query with aliases"):
+      parseQuery("""
+      |query {
+      |  v: viewer {
+      |    l: login
+      |  }
+      |}""".stripMargin).assertMatch:
+        case Some(
+              Query(
+                Kind.Query,
+                None,
+                None,
+                SelectionSet(
+                  List(
+                    Field(
+                      Some("v"),
+                      "viewer",
+                      None,
+                      Some(
+                        SelectionSet(
+                          List(
+                            Field(Some("l"), "login", None, None)
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            ) =>
+
